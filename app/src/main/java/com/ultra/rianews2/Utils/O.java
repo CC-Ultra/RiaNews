@@ -11,9 +11,14 @@ public class O
 	 {
 	 public static final String TAG= "c123";
 
+	 public static class extra
+		 {
+		 public static final String ID= "Id";
+		 }
 	 public static class web
 		 {
-		 public static final String HOST= "https://ria.ru/";
+		 public static final String HOST= "https://ria.ru";
+		 public static final String HOME= "https://ria.ru/lenta/";
 		 }
 	 public static class date
 		 {

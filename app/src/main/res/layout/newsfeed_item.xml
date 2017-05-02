@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+		xmlns:android="http://schemas.android.com/apk/res/android"
+		android:layout_height="@dimen/newsfeed_item_h"
+		android:layout_width="@dimen/newsfeed_item_w">
+	<ImageView
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:id="@+id/img"/>
+	<ImageView
+			android:layout_width="match_parent"
+			android:layout_height="50dp"
+			android:background="@drawable/gradient_shape"
+			android:layout_gravity="center|bottom"
+			android:id="@+id/gradient"/>
+	<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:textSize="18sp"
+			android:layout_marginLeft="5dp"
+			android:textColor="#ffffff"
+			android:layout_gravity="bottom"
+			android:layout_marginBottom="20dp"
+			android:id="@+id/news"/>
+	<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:textSize="14sp"
+			android:layout_marginLeft="5dp"
+			android:textColor="#ffffff"
+			android:layout_gravity="bottom"
+			android:id="@+id/theme"/>
+</FrameLayout >

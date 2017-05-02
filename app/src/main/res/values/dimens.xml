@@ -1,5 +1,9 @@
 <resources >
 	<!-- Default screen margins, per the Android Design guidelines. -->
+	<dimen name="newspic_w">360dp</dimen >
+	<dimen name="newspic_h">100dp</dimen >
+	<dimen name="newsfeed_item_w">360dp</dimen >
+	<dimen name="newsfeed_item_h">205dp</dimen >
 	<dimen name="activity_horizontal_margin" >16dp</dimen >
 	<dimen name="activity_vertical_margin" >16dp</dimen >
 	<dimen name="nav_header_vertical_spacing" >16dp</dimen >

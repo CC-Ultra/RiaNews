@@ -8,8 +8,7 @@ import android.widget.ImageView;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.RequestCreator;
 import com.ultra.rianews2.App;
-import com.ultra.rianews2.Units.Category;
-import com.ultra.rianews2.Units.CategoryDao;
+import com.ultra.rianews2.Units.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -49,15 +48,30 @@ public class CacheManager
 		 }
 	 public static boolean checkForNewsfeed(String link)
 		 {
-		 Category category= App.session.getCategoryDao().queryBuilder().where(CategoryDao.Properties.Link.eq(link)).list().get(0);
-		 ArrayList newsfeed= new ArrayList(category.getNewsPreviews() );
-		 return newsfeed.size()!=0;
+		 ArrayList<Category> categories= new ArrayList<>(App.session.getCategoryDao().queryBuilder().where(CategoryDao.Properties.Link.eq(link)).list() );
+		 ArrayList<NewsPreview> newsfeed=null;
+		 if(categories.size()!=0)
+			 newsfeed= new ArrayList(categories.get(0).getNewsPreviews() );
+		 return newsfeed!=null && newsfeed.size()!=0;
 		 }
 	 public static boolean checkForNews(String link)
 		 {
-		 return true;
+		 ArrayList<News> news= new ArrayList<>(App.session.getNewsDao().queryBuilder().where(NewsDao.Properties.Link.eq(link)).list() );
+		 return news.size()!=0;
 		 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	 public static ArrayList<NewsPreview> getNewsfeed(String link)
+		 {
+		 ArrayList<NewsPreview> result= new ArrayList<>();
+		 Category category= App.session.getCategoryDao().queryBuilder().where(CategoryDao.Properties.Link.eq(link)).list().get(0);
+		 result.addAll(category.getNewsPreviews() );
+		 return result;
+		 }
+	 public static News getNews(String link)
+		 {
+		 ArrayList<News> news= new ArrayList<>(App.session.getNewsDao().queryBuilder().where(NewsDao.Properties.Link.eq(link)).list() );
+		 return news.get(0);
+		 }
+
 	 /**
 	  * Отсекает всю строку до последнего {@code '/'} включительно, оставляя только имя
 	  * @return пустая строка, если на вход пришла пустая или {@code null}, или вырезанное из url имя файла

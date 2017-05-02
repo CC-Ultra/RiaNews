@@ -6,11 +6,14 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 import com.ultra.rianews2.App;
-import com.ultra.rianews2.Units.Category;
+import com.ultra.rianews2.Callbacks.OnLoadNewsCallback;
+import com.ultra.rianews2.Callbacks.OnLoadNewsfeedCallback;
+import com.ultra.rianews2.R;
+import com.ultra.rianews2.Units.*;
 import com.ultra.rianews2.Utils.CacheManager;
 import com.ultra.rianews2.Utils.O;
-import com.ultra.rianews2.Callbacks.OnInitCategoriesCallback;
 import com.ultra.rianews2.Utils.Toaster;
+import org.greenrobot.greendao.query.QueryBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -21,8 +24,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.ArrayList;
 
 /**
  * <p></p>
@@ -31,21 +33,22 @@ import java.util.TreeMap;
  * @author CC-Ultra
  */
 
-public class InitCategoriesParser extends AsyncTask<Void,Void,TreeMap<String,String> >
+public class NewsParser extends AsyncTask<Void,Void,News>
 	 {
 	 private ProgressDialog dialog;
 	 private Context context;
-	 private OnInitCategoriesCallback callback;
+	 private OnLoadNewsCallback callback;
 	 private String pageSrc;
 	 private Document docDOM;
+	 private String selectedCategory;
 
-	 public InitCategoriesParser(Context _context,String _pageSrc,OnInitCategoriesCallback _callback)
+	 public NewsParser(Context _context,String _pageSrc,OnLoadNewsCallback _callback,String _selectedCategory)
 		 {
+		 selectedCategory=_selectedCategory;
 		 context=_context;
 		 callback=_callback;
 		 pageSrc=_pageSrc;
 		 }
-
 	 private void fillBasicURLparams(HttpURLConnection urlConnn)
 		 {
 		 urlConnn.setRequestProperty("Connection","keep-alive");
@@ -62,7 +65,7 @@ public class InitCategoriesParser extends AsyncTask<Void,Void,TreeMap<String,Str
 		 URL url;
 		 try
 			 {
-			 url=new URL(pageSrc +"/");
+			 url=new URL(pageSrc);
 			 HttpURLConnection urlConnn=(HttpURLConnection) url.openConnection();
 			 fillBasicURLparams(urlConnn);
 			 urlConnn.setConnectTimeout( (int) O.date.MINUTE_MILLIS/4);
@@ -90,9 +93,9 @@ public class InitCategoriesParser extends AsyncTask<Void,Void,TreeMap<String,Str
 		 }
 
 	 @Override
-	 protected TreeMap<String,String> doInBackground(Void... params)
+	 protected News doInBackground(Void... params)
 		 {
-		 TreeMap<String,String> result= new TreeMap<>();
+		 News result= new News();
 		 try
 			 {
 			 initDOM();
@@ -102,26 +105,30 @@ public class InitCategoriesParser extends AsyncTask<Void,Void,TreeMap<String,Str
 			 Toaster.makeHomeToast(context,"Ошибка соединения");
 			 return null;
 			 }
-		 Elements lists= docDOM.getElementsByAttributeValue("class","b-footer__column");
-		 for(int i=0; i<2; i++)
+		 Element titleElement= docDOM.getElementsByAttributeValue("class","b-article__title").first();
+		 String title= titleElement.text();
+		 StringBuilder date= new StringBuilder();
+		 Elements dateElements= docDOM.getElementsByAttributeValue("class","b-article__info-date").first().getAllElements();
+		 date.append(dateElements.get(0).text().substring(5) );
+		 date.append(" ");
+		 date.append(dateElements.get(1).text() );
+		 Element img= docDOM.getElementsByAttributeValue("class","l-photoView__open").first();
+		 String picStr= img.attr("data-photoview_src");
+		 StringBuilder txt= new StringBuilder();
+		 Elements txtElements= docDOM.getElementsByAttributeValue("class","b-article__body js-mediator-article").get(0).getElementsByTag("p");
+		 for(Element txtElement : txtElements)
 			 {
-			 Element list= lists.get(i);
-			 for(Element element : list.getElementsByTag("a") )
-				 {
-				 String key= element.text();
-				 String hrefAttr=element.attr("href");
-				 String value;
-				 if(hrefAttr.contains("http") )
-				 	value=hrefAttr;
-				 else
-					 {
-					 if(hrefAttr.equals("/") )
-						 hrefAttr="/lenta/";
-					 value= pageSrc + hrefAttr;
-					 }
-				 result.put(key,value);
-				 }
+			 txt.append(txtElement.text() );
+			 txt.append("\n");
 			 }
+		 result.setDate(date.toString() );
+		 result.setLink(pageSrc);
+		 result.setNewsTxt(title);
+		 result.setTxt(txt.toString() );
+		 result.setPic(picStr);
+		 result.setTheme(selectedCategory);
+		 CacheManager.storeWebSrcPic(result.getPic(),R.dimen.newspic_w,R.dimen.newspic_h);
+		 result.setPic(CacheManager.getFilenameFromURL(result.getPic() ) );
 		 return result;
 		 }
 	 @Override
@@ -129,23 +136,22 @@ public class InitCategoriesParser extends AsyncTask<Void,Void,TreeMap<String,Str
 		 {
 		 dialog= new ProgressDialog(context);
 		 dialog.setIndeterminate(true);
-		 dialog.setMessage("Инициализация...");
+		 dialog.setMessage("Загрузка новости...");
 		 dialog.setCancelable(false);
 		 dialog.show();
 		 }
 	 @Override
-	 protected void onPostExecute(TreeMap<String,String> result)
+	 protected void onPostExecute(News result)
 		 {
 		 dialog.dismiss();
-		 if(!CacheManager.checkForCategories() && result!=null)
-			 for(TreeMap.Entry<String,String> x : result.entrySet() )
-				 {
-				 Category category= new Category();
-				 category.setTitle(x.getKey() );
-				 category.setLink(x.getValue() );
-				 App.session.getCategoryDao().insert(category);
-				 }
-		 callback.useParserResult(result);
+		 if(result!=null)
+			 {
+			 if(!CacheManager.checkForNews(pageSrc) )
+				 App.session.getNewsDao().insert(result);
+			 else
+			 	result= App.session.getNewsDao().queryBuilder().where(NewsDao.Properties.Link.eq(pageSrc) ).list().get(0);
+			 }
+		 callback.jumpToNewsActivity(result,pageSrc);
 		 super.onPostExecute(result);
 		 }
 	 }

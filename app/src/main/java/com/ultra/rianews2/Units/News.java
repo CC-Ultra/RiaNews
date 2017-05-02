@@ -15,16 +15,19 @@ import org.greenrobot.greendao.annotation.Generated;
 public class News
 	 {
 	 @Id(autoincrement = true)
-	 Long id;
+	 private Long id;
 
-	 String txt,date,theme,link;
+	 private String txt,date,theme,newsTxt,pic,link;
 
-		@Generated(hash = 265708018)
-		public News(Long id, String txt, String date, String theme, String link) {
+		@Generated(hash = 1465876385)
+		public News(Long id, String txt, String date, String theme, String newsTxt,
+				String pic, String link) {
 			this.id = id;
 			this.txt = txt;
 			this.date = date;
 			this.theme = theme;
+			this.newsTxt = newsTxt;
+			this.pic = pic;
 			this.link = link;
 		}
 
@@ -62,6 +65,22 @@ public class News
 
 		public void setTheme(String theme) {
 			this.theme = theme;
+		}
+
+		public String getPic() {
+			return this.pic;
+		}
+
+		public void setPic(String pic) {
+			this.pic = pic;
+		}
+
+		public String getNewsTxt() {
+			return this.newsTxt;
+		}
+
+		public void setNewsTxt(String newsTxt) {
+			this.newsTxt = newsTxt;
 		}
 
 		public String getLink() {
